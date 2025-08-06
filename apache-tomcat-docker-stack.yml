@@ -1,0 +1,62 @@
+version: "3.2"
+
+services:
+  httpd:
+    image: my_repo/apache-http:v1
+    ports:
+      - "7080:80"
+      - "7443:443"
+    networks:
+      - tom-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - 'node.labels.apachehost == yes'
+  tomcat1:
+    image: my_repo/apache-tomcat:v1
+    secrets:
+      - source: tomcat_keystore
+        target: TOMkeystore.p12
+    volumes:
+       - tom-logs:/opt/apache-tomcat-10.1.8/logs
+    networks:
+      tom-net:
+        aliases:
+          - tom1
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - 'node.labels.instance == tom1'
+  tomcat2:
+    image: my_repo/apache-tomcat:v1
+    secrets:
+      - source: tomcat_keystore
+        target: TOMkeystore.p12
+    volumes:
+       - tom-logs:/opt/apache-tomcat-10.1.8/logs
+    networks:
+      tom-net:
+        aliases:
+          - tom2
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - 'node.labels.instance == tom2'
+
+
+volumes:
+  tom-logs:
+
+networks:
+  tom-net:
+    driver: overlay
+    driver_opts:
+      encrypted: 'yes'
+
+secrets:
+  tomcat_keystore:
+    external: true
+
