@@ -1,10 +1,13 @@
 # apache-tomcat-docker-stack
-A Docker Stack to create a multi-node Apache Tomcat microservice.
+A Docker Stack to create an Apache Tomcat container-based microservice.
 
 ## Overview
 I have developed a Docker Stacks file, `apache-tomcat-docker-stack.yml`, to build a custom microservice comprising [Apache Tomcat](https://tomcat.apache.org/) instances front-ended by an [Apache HTTP web server](https://httpd.apache.org/) in a classic reverse-proxy configuration (see diagram below).
 
-The configuration uses a custom encrypted *overlay* network, called `tom-net`, so SSL is not needed for secure communications between the web server and Tomcat members. Only the web server exposes its `Listen` ports externally, including the `https` port.
+![Diagram](schematic.png)
+
+
+The configuration uses a custom encrypted *overlay* container network, called `tom-net`, so SSL is not needed for secure communications between the web server container and Tomcat server containers. Only the web server exposes its `Listen` ports externally, including an `https` port.
 
  
 ## Prerequisites
@@ -16,27 +19,27 @@ Before using the Stacks file to build the microservice the following is needed:
 
 - [x] A user account on each host machine with the ability to run `docker` commands, (this may require `sudo`).
 
-- [x] Custom Docker images for *Apache HTTP Server* and *Apache Tomcat*, and an accessible Docker repository to hold these images. (This is covered below).
+- [x] Custom Docker images for [Apache HTTP Server](https://github.com/rmyers3141/apache-http-docker-image-build) and [Apache Tomcat](https://github.com/rmyers3141/apache-tomcat-docker-image-build), and an accessible Docker repository to hold these images. (This is covered below).
 
-- [x] To put the participating Docker node machines into *Swarm mode*, and any required *secrets* created in advance. (This is also covered below).
+- [x] Put the participating Docker node machines into *Swarm mode*, and any required *secrets* created in advance. (This is also covered below).
 
 
 ## Docker Image Creation
-Docker Stacks doesn't support image creation, so the necessary Docker images must be created first.
+Docker Stacks doesn't support image creation, so the necessary Docker images must be prepared first.
 
 The images used are created from the files in the following repositories:
 
 - [apache-tomcat-docker-image-build](https://github.com/rmyers3141/apache-tomcat-docker-image-build)
 - [apache-http-docker-image-build](https://github.com/rmyers3141/apache-http-docker-image-build)
 
-However, instead of using the `config/*` files from these repos, use the following ones provided in this repo and contained in the folders:
+However, instead of using the `config/*` files from these repos, use the following ones provided with this GitHub repo and contained in the folders:
 
 - `apache-tomcat-config/`   - for [apache-tomcat-docker-image-build](https://github.com/rmyers3141/apache-tomcat-docker-image-build)
 - `apache-http-config/`     - for [apache-http-docker-image-build](https://github.com/rmyers3141/apache-http-docker-image-build)
 
 These files have some minor configuration changes to support the Swarm configuration.
 
-Save the images to a suitable Docker image repository accessible from the host machines and verify the are available, e.g.:
+Once the images have been prepared, save them to a suitable Docker image repository accessible from the host machines, and verify the are available, e.g.:
 
 ```sh
 REPOSITORY          	      TAG       IMAGE ID       CREATED         SIZE
@@ -46,7 +49,7 @@ my_repo/apache-http           v1      038eba9c555f   25 hours ago     145MB
 
 
 ## Prepare Docker node machines for Swarm mode
-The Docker daemons participating in a Swarm need to be able to communicate with each other over the following ports, so you may need to check your machines' firewall ports allow this traffic first:
+The Docker daemons participating in a Swarm need to be able to communicate with each other over the following ports, so you may need to check your machines' firewall ports to allow this traffic first:
 
 - Port **2377 TCP** for Management communications.
 - Port **7946 TCP/UDP** for container network discovery.
